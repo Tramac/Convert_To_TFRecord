@@ -2,7 +2,7 @@
 这是一份如何将数据转为tfrecord格式的教程
 
 **在开始之前有一个坑需要说明一下(超级坑啊!)**<br>
-**一般来说,python读取图像时,常用的方式有以下三种:**
+一般来说,python读取图像时,常用的方式有以下三种:
 ```python
    import numpy as np
    import scipy.misc as misc
