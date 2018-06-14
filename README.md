@@ -1,6 +1,25 @@
 # Convert_To_TFRecord
 这是一份如何将数据转为tfrecord格式的教程
 
+**在开始之前有一个坑需要说明一下(超级坑啊!)**<br>
+**一般来说,python读取图像时,常用的方式有以下三种:**
+```python
+   import numpy as np
+   import scipy.misc as misc
+   import matplot.pyplot as plt
+   from PIL import Image
+       
+   # method 1
+   image1 = misc.imread(image_path)
+       
+   # method 2
+   image2 = plt.imread(image_path)
+       
+   # method 3
+   image3 = Image.open(image_path)
+   image3 = np.array(image3)
+```
+
 ## Tensorflow提供的三种数据读取的方式
 
 * Feeding: Python产生数据，再把数据喂给后端(这个应该是最常见到也是最熟悉的方式了)。
