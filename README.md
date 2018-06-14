@@ -154,5 +154,36 @@ TFRecords是一种二进制文件,能够更好的利用内存,方便复制和移
       # 解析出图像之后,可以做你想要的预处理,比如归一化,数据扩增等等
       image, label = preprocess_image(image, label, is_training="train")
       
-      
+      return image, label
 ```
+训练时的数据接口,就可以很方便的用下面的方式
+```python
+   image, label = read_and_decode("VOC2007_train.tfrecord")
+   image_batch, label_batch = tf.train.shuffle_batch([image, label],
+                                                     batch_size=64,
+                                                     capacity=2000,
+                                                     min_after_dequeue=5) # capacity,min_after_dequeue两个参数详细看官网,其中min_after_dequeue参数对获取数据速度有很大的影响,请根据自己的数据情况调节
+   
+   init = tf.initialize_all_variables()
+   with tf.Session() as sess:
+       sess.run(init) # 相当于初始化定义的graph,完整的模型肯定会包含的
+       # 启动多线程处理数据,很重要,虽然不知道为什么,但是不用会出错
+       coord = tf.train.Coordinator()
+       threads = tf.train.start_queue_runners(sess=sess, coord=coord) # 必不可少
+       img, label = sess.run([img_batch, label_batch])
+       
+       # 再往下就可以对你的批数据进行操作了,比如你要打印形状
+       print(img.shape)
+       
+       coord.request_stop()
+       coord.join(threads)
+```
+
+### 流程总结
+* 生成tfrecord格式文件
+* 定义record reader解析tfrecord文件,也就是`read_and_decode`函数
+* 构建一个批生成器`tf.train.shuffle_batch`
+* 初始化操作
+* 启动QueueRunner
+
+**以上是整个过程总结,这只是一个数据结构,完整的项目运用请见后续工作~**
