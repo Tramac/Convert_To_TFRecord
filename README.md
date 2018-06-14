@@ -112,4 +112,47 @@ TFRecords是一种二进制文件,能够更好的利用内存,方便复制和移
     
   writer.close()
 ```
-执行上面的代码就可以把数据生成tfrecord文件了,那么下面应该就是在训练时,如何从tfrecord文件中解析出图像了.
+执行上面的代码就可以把数据生成tfrecord文件了,那么下面应该就是在训练时,如何从tfrecord文件中解析出图像了.<br>
+
+### Tensorflow从TFRecord中读取数据
+生成了tfrecord文件之后,为了高效的读取数据,TF中使用队列(queue)读取数据
+```Python
+   def read_and_decode(self, filename):
+       # 创建一个队列
+       filename_queue = tf.train.string_input_producer([filename]) # 
+       # 创建一个reader来读取tfrecord文件中的样例
+       reader = tf.TFRecordReader()
+       # 从文件中读取一个样例
+       _, serialized_example = reader.read(filename_queue)
+       # 解析读入的一个样例
+       features = tf.parse_single_example(serialized_example,
+                                           features={
+                                               'label_raw': tf.FixedLenFeature([], tf.string),
+                                               'image_raw': tf.FixedLenFeature([], tf.string),
+                                               'height': tf.FixedLenFeature([], tf.int64),
+                                               'width': tf.FixedLenFeature([], tf.int64),
+                                           })
+       
+       '''
+       下面的两种解析方法和前面的编码方法保持对应关系,即前面如果用method1编码,这里也应该用method1解码,method2同理.
+       '''
+       # method 1
+       height = tf.cast(features['height'], tf.int32)
+       width = tf.cast(features['width'], tf.int32)
+       image = tf.decode_raw(features['image_raw'], tf.uint8) # 将字符串解析成图像对应的像素数组,注意这里并不是三维矩阵,而是一个列向量,所以后面需要reshape恢复原图像大小
+       image = tf.reshape(image, [height, width, 3]) # 当然,如果你的图像允许,可以在编码之前就将你的图像resize到一个固定尺寸,这里解析的时候直接reshape就可以了,这样一来,就不用获取height,width属性了.
+       label = tf.decode_raw(features['label_raw'], tf.uint8)
+       label = tf.reshape(label, [height, width, 1])
+       
+       '''
+       方法2是直接解析出jpg,png图像,但是这种方式有它固定的编码方式,即编码方法2,该方法不用reshape,但是如前面提到的,由于对png格式的图像不太友好,所以慎用
+       '''
+       # method 2
+       # image = tf.image.decode_jpeg(features['image_raw'])
+       # label = tf.image.decode_png(features['label_raw'])
+       
+      # 解析出图像之后,可以做你想要的预处理,比如归一化,数据扩增等等
+      image, label = preprocess_image(image, label, is_training="train")
+      
+      
+```
