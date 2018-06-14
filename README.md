@@ -49,5 +49,66 @@ TFRecords是一种二进制文件,能够更好的利用内存,方便复制和移
 <br>
 下面以Pascal VOC2007的分割任务为例,来说明如何利用TFRecords,当然自己的数据格式也可以灵活运用!<br>
 
+为了方便起见,只对部分代码片做出解释,代码片和完整代码并不完全一样.<br>
 ## 将数据转化为TFRecord格式
 ### 准备数据
+* 首先,下载VOC2007数据集,并将其解压到`./datasets`文件夹.
+### 生成TFRecords文件
+```Python
+   import os
+   import random
+   import numpy as np
+   import tensorflow as tf
+   
+   from PIL import Image
+   
+   data_dir = "./datasets/VOC2007"
+   output_dir = os.path.join(data_dir, "tfrecord_data")
+   if not tf.gfile.Exists(output_dir):
+       tf.gfile.MakeDirs(output_dir)
+       
+   # 给你生成的tfrecord文件起一个有辨识度的文件名
+   tfrecord_filename = os.path.join(output_dir, '{}_{}.tfrecord'.format("VOC2007", "train"))
+   
+   # 创建一个writer来写TFRecord文件
+   writer = tf.python_io.TFRecordWriter(tfrecord_filename)
+   
+   # 获取要处理的数据
+   examples_path = os.path.join(data_dir, 'ImageSets', 'Segmentation', 'train' + '.txt') # 根据自己的数据格式更改
+   examples_list = read_examples_list(examples_path)
+   
+   # 获取image,label的文件名
+   for idx, example in enumerate(examples_list):
+       image_path = os.path.join(data_dir, "JPEGImages", example + '.jpg')
+       label_path = os.path.join(data_dir, "SegmentationClass", example + '.png')
+       
+       # 下面提供了两种对数据读取以及编码的方式,也就是最开始提到的坑出现的地方,其中method 1是正常的方法,建议使用此方法
+       # method 1
+       image = np.array(Image.open(image_path)) 
+       label = np.array(Image.open(label_path)) # 用Image读取图像,小心这里的坑
+       height, width = image.shape[0], image.shape[1] # 
+       image_raw = image.tobytes() # 将图像转化为生成一个字符串,注意,对于(224, 224, 3)的图像而言,转换之后是一个224x224x3的列向量(?)
+       label_raw = label.tobytes() # 不再是三维矩阵,这也是为什么上面要获取height和width,为了解码的时候对列向量reshape,恢复原图大小
+       
+       '''
+       方法2是一个更为直接的编码方式,解码时也很方便,但是存在的一个问题是,tf.gfile.FastGFile对png图像编码时出现了和misc和plt读取png时相同的问题,使得label的数值发生更改,所以这里方法2并不合适,但是如果你的标签不是png格式,用这个方法应该不错(请自己尝试).
+       '''
+       # method 2
+       # image = np.array(Image.open(image_path)) #
+       # height, width = image.shape[0], image.shape[1] # 这里获取height,width不是必须的
+       # image_raw = tf.gfile.FastGFile(image_path, 'r').read()
+       # label_raw = tf.gfile.FastGFile(label_path, 'r').read()
+       
+       # 将一个样例转化为Example Protocol Buffer,并将所有的信息写出这个数据结构,这里可以看出tfrecord的巨大优势了,因为不必将image和label分开,而且可以集成更多的属性
+       example = tf.train.Example(features=tf.train.Features(feature={
+        'label_raw': bytes_feature(label),
+        'image_raw': bytes_feature(image),
+        'height': int64_feature(height),
+        'width': int64_feature(width)
+    }))
+    
+    # 将一个Example写入TFRecord文件
+    writer.write(example.SerializeToString())
+    
+  writer.close()
+```
