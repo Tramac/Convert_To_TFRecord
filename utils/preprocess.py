@@ -22,7 +22,7 @@ def rescale(image, label, height, width, scale):
     return new_image, new_label
 
 
-def random_crop_and_pad(image, label, crop_height, crop_width, ignore_label=255):
+def random_crop_and_pad(image, label, crop_height, crop_width, ignore_label=0):
     label = tf.cast(label, dtype=tf.float32)
     label = label - ignore_label
     image_label = tf.concat([image, label], axis=3)
