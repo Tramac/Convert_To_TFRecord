@@ -86,6 +86,7 @@ TFRecords是一种二进制文件,能够更好的利用内存,方便复制和移
        # method 1
        image = np.array(Image.open(image_path)) 
        label = np.array(Image.open(label_path)) # 用Image读取图像,小心这里的坑
+       label[label == 255] = 0 # 针对语义分割,要求标签的值为[0,21),但是标注的边界部分都是255,这里将其置为0,这可能不是一个好的解决方法,包括后处理中,将添加的背景也是置为0
        height, width = image.shape[0], image.shape[1] # 
        image_raw = image.tobytes() # 将图像转化为生成一个字符串,注意,对于(224, 224, 3)的图像而言,转换之后是一个224x224x3的列向量(?)
        label_raw = label.tobytes() # 不再是三维矩阵,这也是为什么上面要获取height和width,为了解码的时候对列向量reshape,恢复原图大小
