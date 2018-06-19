@@ -47,6 +47,7 @@ def convert_to_tfrecord(data_dir, output_dir, shuffling=False, max_samples=None)
         # method 1
         image = np.array(Image.open(image_path))
         label = np.array(Image.open(label_path))
+        label[label == 255] = 0
         height, width = image.shape[0], image.shape[1]
         image_raw = image.tobytes()
         label_raw = label.tobytes()
