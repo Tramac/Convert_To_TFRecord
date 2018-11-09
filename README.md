@@ -1,14 +1,12 @@
 # Convert_To_TFRecord
 
 ### Update
-2018.11.09更新。<br>
-非常抱歉之前的代码是有些问题的，因为在转换成tfrecord格式的过程中，解码后对图像做了预处理（resize等），导致的结果就是检测出解码和编码时不匹配，在python中的报错如下：<br>
+当出现以下错误时，请先检查路径是否有错误。
 ```
 OutOfRangeError (see above for traceback): RandomShuffleQueue '_0_shuffle_batch/random_shuffle_queue' is closed and has insufficient elements (requested 16, current size 0)
 	 [[Node: shuffle_batch = QueueDequeueManyV2[component_types=[DT_FLOAT, DT_UINT8], timeout_ms=-1, _device="/job:localhost/replica:0/task:0/device:CPU:0"](shuffle_batch/random_shuffle_queue, shuffle_batch/n)]]
 
 ```
-所以要重新思考一下转换过程。
 
 ----------
 
