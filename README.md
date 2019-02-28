@@ -30,7 +30,7 @@ OutOfRangeError (see above for traceback): RandomShuffleQueue '_0_shuffle_batch/
    image3 = Image.open(image_path)
    image3 = np.array(image3) # 这里将Image对象转换为array,不影响数值大小
 ```
-注：python中，如果用opencv读取图片，那么读进来的就是BGR，如果时PIL.Image读取的图片就是RGB。<br>
+注：python中，如果用opencv读取图片，那么读进来的就是BGR,矩阵大小为(h,w,3)，如果是PIL.Image读取的图片就是RGB，矩阵大小为(w,h,3)。<br>
 为什么说是坑呢?<br>
 <br>
 对于`.jpg`格式图像来说,三种读取方法没什么区别.假设一幅尺寸为(224, 224, 3)的`jpg`图像,每个方法读取后都是一个大小为(224, 224, 3)的三维矩阵,且数据类型均为`uint8`.所以,对于`jpg`图像,大家都很正常!<br>
